@@ -14,10 +14,10 @@ export const registrationSchema = z.object({
     password: z
         .string()
         .min(8, 'Password must be at least 8 characters')
-        // .regex(/(?=.*[a-z])/, 'Password must contain at least one lowercase letter')
-        // .regex(/(?=.*[A-Z])/, 'Password must contain at least one uppercase letter')
-        // .regex(/(?=.*\d)/, 'Password must contain at least one number')
-        // .regex(/(?=.*[@$!%*?&])/, 'Password must contain at least one special character'),
+    // .regex(/(?=.*[a-z])/, 'Password must contain at least one lowercase letter')
+    // .regex(/(?=.*[A-Z])/, 'Password must contain at least one uppercase letter')
+    // .regex(/(?=.*\d)/, 'Password must contain at least one number')
+    // .regex(/(?=.*[@$!%*?&])/, 'Password must contain at least one special character'),
 });
 
 // TypeScript type from Zod schema
@@ -32,16 +32,16 @@ export const signInSchema = z.object({
     password: z
         .string()
         .min(8, 'Password must be at least 8 characters')
-        // .regex(/(?=.*[a-z])/, 'Password must contain at least one lowercase letter')
-        // .regex(/(?=.*[A-Z])/, 'Password must contain at least one uppercase letter')
-        // .regex(/(?=.*\d)/, 'Password must contain at least one number')
-        // .regex(/(?=.*[@$!%*?&])/, 'Password must contain at least one special character'),
+    // .regex(/(?=.*[a-z])/, 'Password must contain at least one lowercase letter')
+    // .regex(/(?=.*[A-Z])/, 'Password must contain at least one uppercase letter')
+    // .regex(/(?=.*\d)/, 'Password must contain at least one number')
+    // .regex(/(?=.*[@$!%*?&])/, 'Password must contain at least one special character'),
 });
 
 // TypeScript type from Zod schema
 export type SignInFormType = z.infer<typeof signInSchema>;
 
-export const resetPasswordSchema = z.object({
+export const forgotPasswordSchema = z.object({
     email: z
         .string()
         .email('Please enter a valid email address')
@@ -49,4 +49,16 @@ export const resetPasswordSchema = z.object({
 });
 
 // TypeScript type from Zod schema
+export type ForgotPasswordFormType = z.infer<typeof forgotPasswordSchema>;
+
+export const resetPasswordSchema = z
+    .object({
+        newPassword: z.string().min(8, "Password must be 8 characters"),
+        confirmPassword: z.string().min(8, "Password must be 8 characters"),
+    })
+    .refine((data) => data.newPassword === data.confirmPassword, {
+        path: ["confirmPassword"],
+        message: "Passwords do not match",
+    });
+
 export type ResetPasswordFormType = z.infer<typeof resetPasswordSchema>;

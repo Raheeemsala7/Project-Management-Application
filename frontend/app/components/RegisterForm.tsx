@@ -22,7 +22,7 @@ export function RegisterForm() {
     const navigate = useNavigate();
 
 
-    const { mutate, isPending } = useSignUpMutation()
+    const { mutateAsync, isPending } = useSignUpMutation()
 
     const form = useForm<RegistrationFormType>({
         resolver: zodResolver(registrationSchema),
@@ -38,31 +38,23 @@ export function RegisterForm() {
         const { name, email, password } = data
 
         try {
-            mutate({ name, email, password }, {
-                onSuccess: () => {
-                    toast.success("Email Verification Required", {
-                        description:
-                            "Please check your email for a verification link. If you don't see it, please check your spam folder.",
-                    });
+            await mutateAsync({ name, email, password })
+            toast.success("Email Verification Required", {
+                description:
+                    "Please check your email for a verification link. If you don't see it, please check your spam folder.",
+            });
 
-                    form.reset();
-                    navigate("/login");
-                },
-                onError: (error: any) => {
-                    if (error.response?.data[0].errors.name === "ZodError") {
-                        console.log(error.response?.data[0].issues[0].message)
-                        toast.error(error.response?.data[0].issues[0].message)
-                    } 
-                        const errorMessage =
-                            error.response?.data?.message  ? error.response?.data?.message : error.response?.data[0].issues[0].message ? error.response?.data[0].issues[0].message : "An error occurred";
-                        console.log(error);
-                        toast.error(errorMessage);
-                    // }
+            form.reset();
+            navigate("/login");
+        } catch (error: any) {
 
-                },
-            })
-        } catch (error) {
-            toast.error("An error occurred. Please try again.")
+            const errorMessage =
+                error.response?.data?.message ? error.response?.data?.message :
+                    error.response?.data[0].issues[0].message ?
+                        error.response?.data[0].issues[0].message :
+                        "An error occurred. Please try again.";
+            toast.error(errorMessage);
+
         }
     }
 

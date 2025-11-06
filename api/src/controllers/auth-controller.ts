@@ -17,7 +17,7 @@ const registerUser = async (req: Request, res: Response) => {
         const { name, email, password } = req.body
 
 
-        const decision = await aj.protect(req, { email } as any);
+        const decision = await aj.protect(req, { email , requested: 1} as any);
         console.log("Arcjet decision", decision);
 
         if (decision.isDenied()) {
@@ -92,7 +92,7 @@ const loginUser = async (req: Request, res: Response) => {
     try {
         const { email, password } = req.body;
 
-    const user = await User.findOne({ email }).select("+password");
+        const user = await User.findOne({ email }).select("+password");
         if (!user) {
             return res.status(401).json({ message: "Invalid email or password" });
         }
@@ -233,7 +233,123 @@ const verifyEmail = async (req: Request, res: Response) => {
     }
 }
 
+const resetPasswordRequest = async (req: Request, res: Response) => {
+    try {
+        const { email } = req.body
+        const user = await User.findOne({ email });
+
+        if (!user) {
+            return res.status(400).json({ message: "User not found" });
+        }
+
+        if (!user.isEmailVerified) {
+            return res
+                .status(400)
+                .json({ message: "Please verify your email first" });
+        }
+        const existingVerification = await Verification.findOne({
+            userId: user.id,
+        });
+        if (existingVerification && existingVerification.expiresAt > new Date()) {
+            return res.status(400).json({
+                message: "Reset password request already sent",
+            });
+        }
+        if (existingVerification && existingVerification.expiresAt < new Date()) {
+            await Verification.findByIdAndDelete(existingVerification.id);
+        }
+
+        const resetPasswordToken = generateJWTToken(user.id, "reset-password");
+
+        await Verification.create({
+            userId: user.id,
+            token: resetPasswordToken,
+            expiresAt: new Date(Date.now() + 15 * 60 * 1000),
+        });
+
+        const resetPasswordLink = `${config.APP_ORIGIN}/reset-password?token=${resetPasswordToken}`;
+        const emailBody = `<p>Click <a href="${resetPasswordLink}">here</a> to reset your password</p>`;
+        const emailSubject = "Reset your password";
+
+        const isEmailSent = await sendEmail(email, emailSubject, emailBody);
+
+        if (!isEmailSent) {
+            return res.status(500).json({
+                message: "Failed to send reset password email",
+            });
+        }
+
+        res.status(200).json({ message: "Reset password email sent" });
+
+
+    } catch (err) {
+        if (err instanceof Error) {
+            console.log("error resetting password", err);
+            res.status(400).json({ success: false, message: err.message });
+        }
+        res.status(500).json({ message: "Internal server error" });
+    }
+};
+
+const verifyResetPasswordTokenAndResetPassword = async (req: Request, res: Response) => {
+    try {
+        const { token, newPassword, confirmPassword } = req.body;
+
+
+        const payload = jwt.verify(token, config.JWT.SECRET) as JwtPayload & { userId?: string; purpose?: string };
+
+        if (!payload) {
+            return res.status(401).json({ message: "Unauthorized" });
+        }
+
+        const { userId, purpose } = payload;
+
+        if (purpose !== "reset-password") {
+            return res.status(401).json({ message: "Unauthorized" });
+        }
+
+        const verification = await Verification.findOne({
+            userId,
+            token,
+        });
+
+        if (!verification) {
+            return res.status(401).json({ message: "Unauthorized" });
+        }
+
+        const isTokenExpired = verification.expiresAt < new Date();
+
+        if (isTokenExpired) {
+            return res.status(401).json({ message: "Token expired" });
+        }
+
+        const user = await User.findById(userId);
+
+        if (!user) {
+            return res.status(401).json({ message: "Unauthorized" });
+        }
+
+        if (newPassword !== confirmPassword) {
+            return res.status(400).json({ message: "Passwords do not match" });
+        }
+
+        user.password = newPassword;
+        await user.save();
+
+        await Verification.findByIdAndDelete(verification.id);
+
+        res.status(200).json({ message: "Password reset successfully" });
+
+
+    } catch (err) {
+        if (err instanceof Error) {
+            console.log("error resetting password", err);
+            return res.status(400).json({ success: false, message: err.message });
+        }
+        res.status(500).json({ message: "Internal server error" });
+    }
+};
 
 
 
-export { registerUser, loginUser , verifyEmail }
+export { registerUser, loginUser, verifyEmail, resetPasswordRequest, verifyResetPasswordTokenAndResetPassword }

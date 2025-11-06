@@ -1,30 +1,49 @@
 import { Button } from '@/components/ui/button'
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
-import { resetPasswordSchema, type ResetPasswordFormType } from '@/lib/zodSchema'
+import { useForgotPasswordMutation } from '@/hooks/use-auth'
+import { forgotPasswordSchema, type ForgotPasswordFormType } from '@/lib/zodSchema'
 import { zodResolver } from '@hookform/resolvers/zod'
+import { Loader2 } from 'lucide-react'
 import { useForm } from 'react-hook-form'
+import { Link } from 'react-router'
+import { toast } from 'sonner'
 
 const forgetPassword = () => {
 
-    const form = useForm<ResetPasswordFormType>({
-        resolver: zodResolver(resetPasswordSchema),
+    const form = useForm<ForgotPasswordFormType>({
+        resolver: zodResolver(forgotPasswordSchema),
         defaultValues: {
             email: "",
         },
     })
 
-    const onSubmit = async (data: ResetPasswordFormType) => {
+    const { mutateAsync, isPending } = useForgotPasswordMutation()
+
+
+    const onSubmit = async (data: ForgotPasswordFormType) => {
         const { email } = data
+        try {
+            await mutateAsync(email)
+            toast.success("Reset link sent to your email. Please check your inbox.")
+            form.reset()
+        } catch (error: any) {
+            const message =
+                error.response?.data?.message ||
+                error.response?.data?.[0]?.issues?.[0]?.message ||
+                "An error occurred. Please try again";
+            toast.error(message);
+        }
     }
     return (
         <>
-            <div className='text-center'>
-                <h4>Forget Password</h4>
+            <div className='text-center space-y-2'>
+                <h4 className='text-3xl text-white font-bold'>Forget Password</h4>
+                <p className='text-slate-300'>Enter your email to reset your password</p>
             </div>
             {/* Form */}
             <Form {...form}>
-                <form onSubmit={form.handleSubmit(onSubmit)} className='space-y-4'>
+                <form onSubmit={form.handleSubmit(onSubmit)} className='space-y-4 mt-6'>
                     <FormField
                         control={form.control}
                         name='email'
@@ -41,15 +60,16 @@ const forgetPassword = () => {
 
 
                     <Button type="submit" className='w-full'
-                    //  disabled={isPending}
-                     >
-                        {/* {isPending ?
+                        disabled={isPending}
+                    >
+                        {isPending ?
                             <Loader2 className='size-4 animate-spin transition-all' />
                             :
                             ""
-                        } */}
-                        Sign In
+                        }
+                        Send Reset Link
                     </Button>
+                    <p className='text-sm text-slate-300 text-center'>Remembered your password? <Link to="/login" className='text-blue-500'>Sign In</Link></p>
                 </form>
             </Form>
         </>

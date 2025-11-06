@@ -29,35 +29,24 @@ export function LoginForm() {
         },
     })
 
-    const { mutate, isPending } = useSignInMutation()
+    const { mutateAsync, isPending } = useSignInMutation()
 
 
     const onSubmit = async (data: SignInFormType) => {
         const { email, password } = data
 
         try {
-            mutate({ email, password }, {
-                onSuccess: () => {
-                    toast.success("Login successful");
-                    navigate("/dashboard");
-
-                    form.reset();
-                },
-                onError: (error: any) => {
-                    if (error.response?.data[0].errors.name === "ZodError") {
-                        console.log(error.response?.data[0].issues[0].message)
-                        toast.error(error.response?.data[0].issues[0].message)
-                    }
-                    const errorMessage =
-                        error.response?.data?.message ? error.response?.data?.message : error.response?.data[0].issues[0].message ? error.response?.data[0].issues[0].message : "An error occurred";
-                    console.log(error);
-                    toast.error(errorMessage);
-                    // }
-
-                },
-            })
-        } catch (error) {
-            toast.error("An error occurred. Please try again.")
+            await mutateAsync({ email, password })
+            toast.success("Login successful");
+            navigate("/dashboard");
+            form.reset();
+        } catch (error: any) {
+            const errorMessage =
+                error.response?.data?.message ? error.response?.data?.message :
+                    error.response?.data[0].issues[0].message ?
+                        error.response?.data[0].issues[0].message :
+                        "An error occurred. Please try again.";
+            toast.error(errorMessage);
         }
     }
 
