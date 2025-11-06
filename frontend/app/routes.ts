@@ -9,9 +9,7 @@ export default [
         route("forgot-password", "routes/auth/forget-password.tsx"),
         route("reset-password", "routes/auth/reset-password.tsx"),
     ]),
-    layout("./routes/auth/authLayout.tsx", [
+    layout("./routes/dashboard/layout.tsx", [
         route("dashboard", "routes/dashboard/index.tsx"),
-
     ]),
-    // layout(>)
 ] satisfies RouteConfig;
