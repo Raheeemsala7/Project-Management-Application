@@ -9,7 +9,7 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
         checkAuth();
     }, []);
 
-    if (!isChecking) return <div>Loading...</div>; // أو Loader
+    if (isChecking) return <div>Loading...</div>; 
 
     if (!isAuthenticated) return <Navigate to="/login" replace />;
 

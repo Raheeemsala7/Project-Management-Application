@@ -11,6 +11,8 @@ import { signInSchema, type SignInFormType, } from "@/lib/zodSchema"
 import { useSignInMutation } from "@/hooks/use-auth"
 import { toast } from "sonner"
 import { useNavigate } from "react-router"
+import { useAuthStore } from "@/store/auth-store"
+import type { LoginResponse } from "@/types"
 
 
 
@@ -30,15 +32,21 @@ export function LoginForm() {
     })
 
     const { mutateAsync, isPending } = useSignInMutation()
+    const { setUser, login , isAuthenticated} = useAuthStore()
+    console.log(isAuthenticated)
 
 
     const onSubmit = async (data: SignInFormType) => {
         const { email, password } = data
 
         try {
-            await mutateAsync({ email, password })
+            const responseData =  await mutateAsync({ email, password }) as LoginResponse;
+            console.log(data)
+            
+            console.log(responseData)
             toast.success("Login successful");
-            navigate("/dashboard");
+            login(responseData?.user)
+
             form.reset();
         } catch (error: any) {
             const errorMessage =

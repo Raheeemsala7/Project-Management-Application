@@ -1,9 +1,12 @@
-import { useEffect, useState } from "react";
 import { useAuthStore } from "@/store/auth-store";
+import Cookies from "js-cookie";
+import { useEffect, useState } from "react";
 import { Navigate } from "react-router";
 
 const GuestRoute = ({ children }: { children: React.ReactNode }) => {
     const { isAuthenticated, checkAuth ,isChecking } = useAuthStore();
+
+      console.log(Cookies.get("token"))
 
     console.log(isAuthenticated , isChecking)
     
