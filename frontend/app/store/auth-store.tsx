@@ -1,39 +1,34 @@
-// src/stores/auth-store.ts
+// src/store/auth-store.ts
 import { create } from "zustand";
-import { persist } from "zustand/middleware";
-import { queryClient } from "../provider/react-query-provider";
-
-interface User {
-  id: string;
-  name: string;
-  email: string;
-}
 
 interface AuthState {
-  user: User | null;
-  token: string | null;
   isAuthenticated: boolean;
-  login: (data: { user: User; token: string }) => void;
+  isChecking: boolean; // حالة التحقق
+  checkAuth: () => void;
   logout: () => void;
 }
 
-export const useAuthStore = create<AuthState>()(
-  persist(
-    (set) => ({
-      user: null,
-      token: null,
-      isAuthenticated: false,
+export const useAuthStore = create<AuthState>((set) => ({
+  isAuthenticated: false,
+  isChecking: true, // نبدأ بالتحقق
 
-      login: ({ user, token }) =>
-        set({ user, token, isAuthenticated: true }),
+  checkAuth: () => {
+    set({ isChecking: true }); // نبدأ التحقق
 
-      logout: () => {
-        queryClient.clear();
-        set({ user: null, token: null, isAuthenticated: false });
-      },
-    }),
-    {
-      name: "auth-storage",
-    }
-  )
-);
+    // نتحقق من وجود التوكين في الكوكيز
+    const token = document.cookie
+      .split("; ")
+      .find((row) => row.startsWith("token="))
+      ?.split("=")[1];
+
+    set({
+      isAuthenticated: !!token,
+      isChecking: false, // انتهى التحقق
+    });
+  },
+
+  logout: () => {
+    // نقدر نضيف كمان مسح الكوكيز عن طريق الباك اند لو عايز
+    set({ isAuthenticated: false });
+  },
+}));

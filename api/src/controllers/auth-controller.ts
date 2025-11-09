@@ -143,7 +143,7 @@ const loginUser = async (req: Request, res: Response) => {
         const token = generateJWTToken(user.id, "login");
 
         res.cookie("token", token, {
-            httpOnly: true,
+            httpOnly: false,
             secure: process.env.NODE_ENV === "production",
             sameSite: "strict",
             maxAge: 7 * 24 * 60 * 60 * 1000,

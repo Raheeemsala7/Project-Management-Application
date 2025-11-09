@@ -11,7 +11,7 @@ import type { Route } from "./+types/root";
 import "./app.css";
 import ReactQueryProvider from "./provider/react-query-provider";
 import { Toaster } from "./components/ui/sonner";
-import { useAuthWatcher } from "./hooks/useAuthWatcher";
+import { useAuthInit } from "./hooks/useAuthWatcher";
 
 export const links: Route.LinksFunction = () => [
   { rel: "preconnect", href: "https://fonts.googleapis.com" },
@@ -46,6 +46,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
 export default function App() {
   // useAuthWatcher();
+  useAuthInit()
   return <ReactQueryProvider>
     <Toaster position="top-right" richColors />
     <Outlet />

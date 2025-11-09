@@ -1,6 +1,8 @@
+import Cookies from 'js-cookie'
 import React from 'react'
 
 const DashboardIndex = () => {
+  console.log(Cookies.get("token"))
   return (
     <div>
       <h5 className='text-5xl text-red-600'>TTTTTTTTT</h5>
